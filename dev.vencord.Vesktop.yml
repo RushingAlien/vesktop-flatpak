@@ -27,6 +27,7 @@ finish-args:
   - --talk-name=com.canonical.indicator.application
   - --talk-name=org.ayatana.indicator.application
   - --talk-name=org.freedesktop.portal.Background
+  - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
 modules:
   - name: Vesktop
     buildsystem: simple
@@ -36,7 +37,7 @@ modules:
 
       - install -dm755 "${FLATPAK_DEST}/bin" "${FLATPAK_DEST}/lib/vesktop"
       - cp -r squashfs-root/* "${FLATPAK_DEST}/lib/vesktop"
-      - cp -r squashfs-root/usr/lib/* "${FLATPAK_DEST}/lib"
+      - rm -r squashfs-root/usr/lib
 
       - install -Dm644 "dev.vencord.Vesktop.png" "${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/dev.vencord.Vesktop.png"
       - install -Dm755 "run.sh" "${FLATPAK_DEST}/bin/dev.vencord.Vesktop"
