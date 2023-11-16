@@ -4,9 +4,14 @@ base-version: '23.08'
 runtime: org.freedesktop.Platform
 runtime-version: '23.08'
 sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node18
 separate-locales: false
 command: dev.vencord.Vesktop
 rename-desktop-file: vesktop.desktop
+build-options:
+  append-path: /usr/lib/sdk/node18/bin
+  prepend-ld-library-path: /usr/lib/sdk/node18/lib
 finish-args:
   - --share=ipc
   - --socket=x11
@@ -31,33 +36,46 @@ finish-args:
 modules:
   - name: Vesktop
     buildsystem: simple
+    subdir: main
+    build-options:
+      env:
+        XDG_CACHE_HOME: /run/build/Vesktop/flatpak-node/cache
+        npm_config_cache: /run/build/Vesktop/flatpak-node/npm-cache
+        npm_config_offline: "true"
     build-commands:
-      - chmod +x Vesktop-*.AppImage
-      - ./Vesktop-*.AppImage --appimage-extract
-
       - install -dm755 "${FLATPAK_DEST}/bin" "${FLATPAK_DEST}/lib/vesktop"
-      - cp -r squashfs-root/* "${FLATPAK_DEST}/lib/vesktop"
-      - rm -r squashfs-root/usr/lib
+      - chmod +x ../pnpm
+      - npm install --offline --legacy-peer-deps --lockfile-version 2 --force
+      - ../pnpm package:dir
+      # - cp -r squashfs-root/* "${FLATPAK_DEST}/lib/vesktop"
+      # - rm -r squashfs-root/usr/lib
 
-      - install -Dm644 "dev.vencord.Vesktop.png" "${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/dev.vencord.Vesktop.png"
-      - install -Dm755 "run.sh" "${FLATPAK_DEST}/bin/dev.vencord.Vesktop"
-      - desktop-file-install --dir="${FLATPAK_DEST}/share/applications" --remove-key=X-AppImage-Version
-        --set-key=Exec --set-value=dev.vencord.Vesktop --set-key=Icon --set-value=dev.vencord.Vesktop
-        vesktop.desktop
+      # - install -Dm644 "dev.vencord.Vesktop.png" "${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/dev.vencord.Vesktop.png"
+      # - install -Dm755 "run.sh" "${FLATPAK_DEST}/bin/dev.vencord.Vesktop"
+      # - desktop-file-install --dir="${FLATPAK_DEST}/share/applications" --remove-key=X-AppImage-Version
+      #   --set-key=Exec --set-value=dev.vencord.Vesktop --set-key=Icon --set-value=dev.vencord.Vesktop
+      #   vesktop.desktop
 
-      - install -Dm644 -t ${FLATPAK_DEST}/share/metainfo dev.vencord.Vesktop.metainfo.xml
+      # - install -Dm644 -t ${FLATPAK_DEST}/share/metainfo dev.vencord.Vesktop.metainfo.xml
     sources:
-      - type: file
-        url: https://github.com/Vencord/Vesktop/releases/latest/download/Vesktop-0.4.3.AppImage
-        sha512: 6e3cc674615e19abdd67879072ca043df69ec586311932e82457c8ef6cb9ac587cf317ea58c5d48bad96ff97192944830a291f385eeaac7adb6d70b311d64ae6
-        x-checker-data:
-          type: electron-updater
-          url: https://github.com/Vencord/Vesktop/releases/latest/download/latest-linux.yml
+      - type: git
+        url: https://github.com/Vencord/Vesktop.git
+        tag: 'v0.4.3'
+        commit: b24535483eba9b099e739ce59838664e3660e215
+        dest: main
       - type: file
         path: dev.vencord.Vesktop.metainfo.xml
       - type: file
         path: dev.vencord.Vesktop.png
       - type: file
         path: vesktop.desktop
+      - npm-sources.json
       - type: file
         path: run.sh
+      - type: file
+        url: https://github.com/pnpm/pnpm/releases/download/v8.10.5/pnpm-linux-x64
+        sha256: 92b2da9a8b2c669ae3741a52dde8f8b694330dbd4cf49bfb331f2454e98556fb
+        dest-filename: pnpm
+      - type: file
+        path: package-lock.json
+        dest: main
